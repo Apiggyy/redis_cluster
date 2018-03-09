@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.self.learning.mapper.customer.DepartmentMapper">
+
+    <!--<cache-ref namespace="EmployeeMapper"/>-->
+    <cache/>
+
+    <select id="getDepartmentById" resultType="com.self.learning.entity.customer.Department">
+          select * from tbl_department where id = #{id}
+    </select>
+
+    <resultMap id="getDepartmentByIdPlus" type="com.self.learning.entity.customer.Department">
+        <id property="id" column="id"/>
+        <result property="deptName" column="dept_name"/>
+        <collection property="emps" ofType="com.self.learning.entity.customer.Employee">
+            <id property="id" column="emp_id"/>
+            <result property="lastName" column="last_name"/>
+            <result property="email" column="email"/>
+            <result property="gender" column="gender"/>
+        </collection>
+    </resultMap>
+
+    <select id="getDepartmentByIdPlus" resultMap="getDepartmentByIdPlus">
+        select
+          a.id,a.dept_name,b.id emp_id,b.last_name,b.email,b.gender
+        from tbl_department a
+        left join tbl_employee b on a.id=b.dept_id
+        where a.id = #{id}
+    </select>
+
+    <resultMap id="getDepartmentByIdStep" type="com.self.learning.entity.customer.Department">
+        <id property="id" column="id"/>
+        <result property="deptName" column="dept_name"/>
+        <!--<collection property="emps" select="EmployeeMapper.selectEmployeeByDeptId" column="id"/>-->
+    </resultMap>
+
+    <select id="getDepartmentByIdStep" resultMap="getDepartmentByIdStep">
+        select d.id,d.dept_name from tbl_department d where d.id = #{id}
+    </select>
+</mapper>

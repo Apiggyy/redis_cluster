@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.self.learning.mapper.customer.EmployeeMapper">
+
+    <!--<cache type="org.mybatis.caches.ehcache.EhcacheCache"/>-->
+    <cache/>
+
+    <resultMap id="employeeMap" type="com.self.learning.entity.customer.Employee">
+        <id property="id" column="id"/>
+        <result property="lastName" column="last_name"/>
+        <result property="email" column="email"/>
+        <result property="gender" column="gender"/>
+        <association property="dept" column="e_deptId" javaType="com.self.learning.entity.customer.Department">
+            <id property="id" column="dept_id"/>
+            <result property="deptName" column="dept_name"/>
+        </association>
+    </resultMap>
+
+    <select id="selectEmployee" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee a where id = #{id}
+    </select>
+
+    <select id="selectEmployeeByParam" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee where id = #{id} and last_name = #{lastName}
+    </select>
+
+    <select id="selectEmployeeByMap" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee where id = #{id} and last_name = #{lastName}
+    </select>
+
+    <select id="selectEmployee" resultType="com.self.learning.entity.customer.Employee" databaseId="oracle">
+        select EMPLOYEE_ID id,LAST_NAME,EMAIL from employees where EMPLOYEE_ID = #{id}
+    </select>
+
+    <insert id="insertEmployee" parameterType="com.self.learning.entity.customer.Employee"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into tbl_employee (last_name,email,gender) values (#{lastName},#{email},#{gender})
+    </insert>
+
+    <!--<insert id="insertEmployee" parameterType="com.self.learning.entity.customer.Employee" databaseId="oracle">
+        &lt;!&ndash;before版本&ndash;&gt;
+        <selectKey keyProperty="id" order="BEFORE" resultType="integer">
+            select EMPLOYEES_SEQ.nextval from dual
+        </selectKey>
+        insert into employees (employee_id,last_name,email)
+        values (#{id},#{lastName},#{email})
+        &lt;!&ndash; values (#{id},#{lastName},#{email,jdbcType=NULL})&ndash;&gt;
+        &lt;!&ndash;after版本&ndash;&gt;
+&lt;!&ndash;        <selectKey keyProperty="id" order="AFTER" resultType="integer">
+            select employees_seq.currval from dual
+        </selectKey>
+        insert into employees (employee_id,last_name,email,hire_date,job_id)
+        values (EMPLOYEES_SEQ.nextval,#{lastName},#{email},#{hireDate},#{jobId})&ndash;&gt;
+    </insert>-->
+
+    <select id="selectEmployeesByLastNameLike" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee e where e.last_name like '%${lastName}%'
+    </select>
+
+    <select id="selectEmployeesByLastNameLikeReturnMap" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee e where e.last_name like '%${lastName}%'
+    </select>
+
+    <select id="selectEmployeeByResultMap" resultMap="employeeMap">
+        select * from tbl_employee where id = #{id}
+    </select>
+
+    <select id="selectEmployeeAndDepartmentById" resultMap="employeeMap">
+        select a.id,a.last_name,a.email,a.gender,a.dept_id e_deptId,b.id dept_id,b.dept_name
+        from tbl_employee a inner join tbl_department b on a.dept_id=b.id
+        where a.dept_id = #{id}
+    </select>
+
+    <resultMap id="selectEmployeeByAssociationStep" type="com.self.learning.entity.customer.Employee">
+        <id property="id" column="id"/>
+        <result property="lastName" column="last_name"/>
+        <result property="email" column="email"/>
+        <result property="gender" column="gender"/>
+        <association property="dept" column="dept_id"
+                     select="com.self.learning.mapper.customer.DepartmentMapper.getDepartmentByIdStep"/>
+    </resultMap>
+
+    <select id="selectEmployeeByAssociationStep" resultMap="selectEmployeeByAssociationStep">
+        select id,last_name,email,gender,dept_id from tbl_employee where id = #{id}
+    </select>
+
+    <select id="selectEmployeeByDeptId" resultType="com.self.learning.entity.customer.Employee">
+        select e.* from tbl_employee e where e.dept_id = #{id}
+    </select>
+
+    <select id="selectEmployeeByDynamicSqlByIf" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee
+        <trim prefix="where" suffixOverrides="and">
+            <if test="id != null">
+                id = #{id} and
+            </if>
+            <if test="lastName != null and lastName != ''">
+                last_name = #{lastName} and
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email} and
+            </if>
+        </trim>
+    </select>
+
+    <select id="selectEmployeeByDynamicSqlByChoose" resultType="com.self.learning.entity.customer.Employee">
+          select * from tbl_employee
+          <where>
+              <choose>
+                  <when test="id != null">
+                      id = #{id}
+                  </when>
+                  <when test="lastName != null and lastName != ''">
+                      and last_name = #{lastName}
+                  </when>
+                  <when test="email != null and email != ''">
+                      and email = #{email}
+                  </when>
+              </choose>
+          </where>
+    </select>
+
+    <update id="updateEmployeeByDynamicSql">
+        update tbl_employee
+        <set>
+            <if test="lastName != null and lastName != ''">
+                last_name = #{lastName},
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <insert id="insertEmpsBatch" databaseId="mysql">
+        insert into tbl_employee (last_name,email,gender,dept_id)
+        values
+        <foreach collection="emps" item="emp" separator=",">
+            (#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dept.id})
+        </foreach>
+    </insert>
+
+    <insert id="insertEmpsBatch" databaseId="oracle">
+        <!-- oracle批量插入第一种方式-->
+<!--        <foreach collection="emps" item="emp" open="begin" close="end;">
+            insert into employees (employee_id,last_name,email,department_id)
+            values
+            (EMPLOYEES_SEQ.nextval,#{emp.lastName},#{emp.email},#{emp.dept.id});
+        </foreach>-->
+        insert into employees (employee_id,last_name,email,department_id)
+          <foreach collection="emps" item="emp" separator="union"
+                   open="select EMPLOYEES_SEQ.nextval,last_name,email,department_id from ("
+                   close=")">
+              select #{emp.lastName} last_name,#{emp.email} email,#{emp.dept.id} department_id from dual
+          </foreach>
+    </insert>
+
+    <select id="testInnerParameter" resultType="com.self.learning.entity.customer.Employee">
+        <if test="_databaseId == 'mysql'">
+            select * from tbl_employee
+        </if>
+        <if test="_databaseId == 'oracle'">
+            select employee_id id,a.* from employees a
+        </if>
+        <where>
+            <if test="_parameter != null">
+                last_name like '%${lastName}%'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAllEmployees" resultType="com.self.learning.entity.customer.Employee">
+        select * from tbl_employee
+    </select>
+
+    <delete id="deleteEmployeeById">
+        delete from tbl_employee where id=#{id}
+    </delete>
+
+
+</mapper>
