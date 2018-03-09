@@ -1,5 +1,6 @@
 package com.self.learning.service;
 
+import com.self.learning.dao.redis.EmployeeDaoRedisImpl;
 import com.self.learning.entity.customer.Employee;
 import com.self.learning.mapper.customer.EmployeeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 public class EmployeeService {
     @Autowired
     private EmployeeMapper employeemapper;
+
+    @Autowired
+    private EmployeeDaoRedisImpl employeeDao;
 
     @Cacheable(value="defaultCache",key="'employee_id_'+#id")
     public Employee selectEmployee(Integer id) {
@@ -27,6 +31,15 @@ public class EmployeeService {
     @CacheEvict(value="defaultCache",key="'employee_id_'+#id")
     public void deleteEmployeeById(Integer id) {
         employeemapper.deleteEmployeeById(id);
+    }
+
+
+    public boolean insertEmployeeBySpringData(Employee employee) {
+        int result = employeemapper.insertEmployee(employee);
+        if (result > 0) {
+            return employeeDao.insert("employee_id_" + employee.getId(), employee);
+        }
+        return false;
     }
 
 }

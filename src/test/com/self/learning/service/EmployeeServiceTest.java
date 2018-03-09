@@ -16,19 +16,25 @@ public class EmployeeServiceTest {
 
     @Test
     public void selectEmployee() throws Exception {
-        Employee employee = employeeService.selectEmployee(89);
+        Employee employee = employeeService.selectEmployee(38);
         System.out.println(employee);
     }
 
     @Test
     public void insertEmployee() throws Exception {
-        Employee employee = new Employee("weixueyu", "123@qq.com", "1");
+        Employee employee = new Employee("messi", "messi@qq.com", "1");
         employeeService.insertEmployee(employee);
     }
 
     @Test
     public void deleteEmployeeById() throws Exception {
         employeeService.deleteEmployeeById(89);
+    }
+
+    @Test
+    public void insertEmployeeBySpringData() throws Exception {
+        Employee employee = new Employee("f1", "f1@qq.com", "1");
+        employeeService.insertEmployeeBySpringData(employee);
     }
 
 }
